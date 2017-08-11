@@ -8,6 +8,8 @@ app.get('/', function(req, res){
 });
 
 var clients = 0;
+var roomno = 1;
+var users= [];
 
 //Whenever someone connects this gets executed
 io.on('connection', function(socket){
@@ -20,6 +22,18 @@ io.on('connection', function(socket){
   socket.emit('chat message','Hey, welcome!');
   //Send message to other clients.
   socket.broadcast.emit('chat message', 'One client is joining.')
+
+  //Rooms
+   socket.on('setUsername', function(data){
+      if(users.indexOf(data) > -1){
+        users.push(data);
+        socket.emit('userSet', {username: data});
+      }
+      else{
+        socket.emit('userExists', data + ' username is taken! Try some other username.');
+      }
+    })
+
 
   socket.on('chat message', function(msg){
     console.log('message: ' + msg);
