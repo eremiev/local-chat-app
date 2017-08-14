@@ -24,22 +24,24 @@
 </head>
 <body>
 <!-- Modal -->
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bs-example-modal-sm">Small modal</button>
-
-<div class="modal fade in bs-example-modal-sm" id="myModal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
-  <div class="modal-dialog modal-sm" role="document">
-    <div class="modal-content">
-    	<div class="form-group">
-            <label for="inputName"  class="col-lg-2 control-label">Name</label>
-              <div class="col-lg-10">
-                 <input type="text" class="form-control" id="inputName" placeholder="Enter your name!">
-                  <button type="button" class="btn btn-default" data-dismiss="modal" onclick="setUsername()">Submit</button>
-            </div>
-		</div>
-		
-    </div>
-  </div>
+<div class="bs-component" id="test">
+   	<div class="modal fade in bs-example-modal-sm" id="myModal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+          <div class="modal-dialog ">
+             <div class="modal-content col-lg-offset-3 col-lg-7">
+               <div class="modal-header">
+                 <h4  id="header" class="modal-title text-center">Enter your name</h4>
+               </div>
+               <div class="modal-body">
+                 <input type="text" class="form-control" id="inputName" placeholder="Name">
+               </div>
+               <div class="modal-footer">
+                 <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="setUsername()">Submit</button>
+               </div>
+             </div>
+          </div>
+   </div>
 </div>
+
 <!-- END Modal -->
  <label id="username" class="col-lg-2 control-label"></label>
  	<ul id="messages"></ul>
@@ -53,6 +55,7 @@
     var socket = null;
 
 	function setUsername(){
+		//TODO capture 'enter' and 'click on background' for sending a name.
      	socket.emit('setUsername', document.getElementById('inputName').value);
 	};
 
@@ -72,6 +75,14 @@
 	    	console.log(data.username);
             user = data.username;
             $('#username').val(user);
+        });
+
+        socket.on('userExists', function(data){
+        	console.log("userExists-client");
+            	  // location.reload();
+            	//TODO show screen for user exist
+            	$('#header').text(data);
+            	$('#myModal').modal('show');
         });
 
 	    socket.on('chat message', function(msg){

@@ -9,13 +9,13 @@ app.get('/', function(req, res){
 
 var clients = 0;
 var roomno = 1;
-var users= [];
+var users= {};
 
 //Whenever someone connects this gets executed
 io.on('connection', function(socket){
-  console.log('A user connected');
-
-  clients++;
+  console.log('Create socket connection.');
+  console.log(users);
+  
   //Send message to all.
   io.sockets.emit('chat message', clients + ' clients connected!');
   //Send message to current connected client.
@@ -23,17 +23,19 @@ io.on('connection', function(socket){
   //Send message to other clients.
   socket.broadcast.emit('chat message', 'One client is joining.')
 
-  //Rooms
-   socket.on('setUsername', function(data){
-      if(users.indexOf(data) > -1){
-        users.push(data);
-        socket.emit('userSet', {username: data});
-      }
-      else{
-        socket.emit('userExists', data + ' username is taken! Try some other username.');
-      }
-    })
+    socket.on('setUsername', function(data){
+    var vals = Object.keys(users).map(function(key) {
+      return users[key];
+    });
+    if (vals.indexOf(data) > -1) {
+      console.log('Username exist.');
+      socket.emit('userExists', data + ' username is taken! Try some other username.');
+    } else {
+      users[socket.id] = data;
+      socket.emit('userSet', {username: data});
+    }
 
+    })
 
   socket.on('chat message', function(msg){
     console.log('message: ' + msg);
@@ -43,7 +45,11 @@ io.on('connection', function(socket){
   //Whenever someone disconnects this piece of code executed
   socket.on('disconnect', function () {
     console.log('A user disconnected');
-    clients--;
+    if(users.hasOwnProperty(socket.id)){
+      delete users[socket.id];
+    } else {
+      console.log('Socket not found for disconect.')
+    }
   });
 
 });
