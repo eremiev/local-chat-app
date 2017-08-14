@@ -24,26 +24,23 @@
 </head>
 <body>
 <!-- Modal -->
-<div class="bs-component" id="test">
-   	<div class="modal fade in bs-example-modal-sm" id="myModal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
-          <div class="modal-dialog ">
-             <div class="modal-content col-lg-offset-3 col-lg-7">
-               <div class="modal-header">
-                 <h4  id="header" class="modal-title text-center">Enter your name</h4>
-               </div>
-               <div class="modal-body">
-                 <input type="text" class="form-control" id="inputName" placeholder="Name">
-               </div>
-               <div class="modal-footer">
-                 <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="setUsername()">Submit</button>
-               </div>
-             </div>
-          </div>
-   </div>
+<div class="modal fade" role="dialog" id="chat_login">
+  <div class="modal-dialog">
+    <div class="modal-content col-lg-offset-3 col-lg-7">
+      <div class="modal-header">
+        <h4 class="modal-title text-center" id="header">Enter your name</h4>
+      </div>
+      <div class="modal-body">
+    	<input type="text" class="form-control" id="inputName" placeholder="Name" autofocus>
+      </div>
+      <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="setUsername()">Login</button>
+       </div>
+    </div>
+  </div>
 </div>
-
 <!-- END Modal -->
- <label id="username" class="col-lg-2 control-label"></label>
+
  	<ul id="messages"></ul>
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
@@ -53,39 +50,59 @@
 <script>
 
     var socket = null;
+    var user = null;
 
 	function setUsername(){
-		//TODO capture 'enter' and 'click on background' for sending a name.
-     	socket.emit('setUsername', document.getElementById('inputName').value);
+		let input = $('#inputName').val();
+		//TODO disable send empty input 
+		if(input != "")
+     		socket.emit('setUsername', input);
+	};
+
+	function scroll(){
+	//	alert();
+	  $('#messages').animate({scrollTop: $('#messages').prop("scrollHeight")}, 500);
 	};
 
 	  $(function () {
 
-	  	socket = io();
+		socket = io();
+		$('#chat_login').modal({backdrop: 'static', keyboard: false});
+		$('#chat_login').modal();
 
-		$('#myModal').modal('show');
+		//if user press 'enter'
+		$(document).keypress(function(e) {
+		  if(user === null && e.which == 13) {
+		 	setUsername();
+			$('#chat_login').modal('hide');
+		  }
+		});
 
 	    $('form').submit(function(){
-	      socket.emit('chat message', $('#m').val());
+	      socket.emit('chat-message', { username: user , msg: $('#m').val() });
 	      $('#m').val('');
 	      return false;
 	    });
 
 	    socket.on('userSet', function(data){
-	    	console.log(data.username);
             user = data.username;
             $('#username').val(user);
         });
 
         socket.on('userExists', function(data){
         	console.log("userExists-client");
-            	  // location.reload();
-            	//TODO show screen for user exist
+        	//TODO fix showing black screen
             	$('#header').text(data);
-            	$('#myModal').modal('show');
+            	$('#chat_login').modal({backdrop: 'static', keyboard: false});
+            	$('#chat_login').modal();
         });
 
-	    socket.on('chat message', function(msg){
+	    socket.on('chat-message', function(data){
+	    	$('#messages').append($('<li>').text(data.username + ": "+ data.msg));
+	    	scroll();
+	    });
+
+	    socket.on('server-message', function(msg){
 	    	$('#messages').append($('<li>').text(msg));
 	    });
 

@@ -15,13 +15,13 @@ var users= {};
 io.on('connection', function(socket){
   console.log('Create socket connection.');
   console.log(users);
-  
+  let count = Object.keys(users).length  + 1;
   //Send message to all.
-  io.sockets.emit('chat message', clients + ' clients connected!');
+  io.sockets.emit('server-message', count + ' clients online!');
   //Send message to current connected client.
-  socket.emit('chat message','Hey, welcome!');
+  socket.emit('server-message','Hey, welcome!');
   //Send message to other clients.
-  socket.broadcast.emit('chat message', 'One client is joining.')
+  socket.broadcast.emit('server-message', 'One client is joining.')
 
     socket.on('setUsername', function(data){
     var vals = Object.keys(users).map(function(key) {
@@ -29,17 +29,16 @@ io.on('connection', function(socket){
     });
     if (vals.indexOf(data) > -1) {
       console.log('Username exist.');
-      socket.emit('userExists', data + ' username is taken! Try some other username.');
+      socket.emit('userExists', 'Username \"' + data + '\" is taken! Try some other username.');
     } else {
       users[socket.id] = data;
       socket.emit('userSet', {username: data});
     }
-
     })
 
-  socket.on('chat message', function(msg){
-    console.log('message: ' + msg);
-     io.emit('chat message', msg);
+  socket.on('chat-message', function(data){
+    console.log('user:' + data.username +  ' message: ' + data.msg);
+     io.emit('chat-message', data);
   });
 
   //Whenever someone disconnects this piece of code executed
